@@ -1,0 +1,18 @@
+{
+  "discord": {
+    "appId": "1534700855620796617",
+    "enabled": true
+  },
+  "hardwareAcceleration": true,
+  "homeUrl": "https://www.youtube.com/",
+  "window": {
+    "width": 1400,
+    "height": 900,
+    "minWidth": 800,
+    "minHeight": 600
+  },
+  "allowedDomains": [
+    "youtube.com",
+    "google.com"
+  ]
+}

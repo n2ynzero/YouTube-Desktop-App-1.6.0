@@ -1,0 +1,67 @@
+{
+  "name": "youtube-for-desktop",
+  "version": "1.6.0",
+  "description": "Unofficial YouTube Desktop App",
+  "author": "Zero",
+  "license": "MIT",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "webpack --config webpack.config.js",
+    "dev": "concurrently \"webpack --config webpack.config.js --watch\" \"wait-on dist/renderer/index.html && electron .\"",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.zero.youtube-for-desktop",
+    "productName": "YouTube For Desktop",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/main/**/*",
+      "dist/**/*",
+      "assets/**/*",
+      "config.json"
+    ],
+    "electronDist": "node_modules/electron/dist",
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon-256.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "dependencies": {
+    "discord-rpc": "^4.0.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-react": "^7.28.5",
+    "@tailwindcss/postcss": "^4.2.1",
+    "autoprefixer": "^10.4.27",
+    "babel-loader": "^10.0.0",
+    "concurrently": "^9.2.1",
+    "css-loader": "^7.1.4",
+    "electron": "^43.3.0",
+    "electron-builder": "^26.8.1",
+    "html-webpack-plugin": "^5.6.6",
+    "mini-css-extract-plugin": "^2.10.0",
+    "postcss": "^8.5.8",
+    "postcss-loader": "^8.2.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwindcss": "^4.2.1",
+    "wait-on": "^9.0.4",
+    "webpack": "^5.105.4",
+    "webpack-cli": "^6.0.1"
+  },
+  "allowScripts": {
+    "github:castlabs/electron-releases#df5ab90dfbe29baf286913cd0c3488c2c133b8e7": true
+  }
+}
