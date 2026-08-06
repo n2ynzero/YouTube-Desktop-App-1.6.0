@@ -267,7 +267,7 @@ export default function SettingsPanel({ open, onClose }) {
   }, []);
 
   const openRepo = useCallback(() => {
-    window.electronAPI.shell.openExternal('https://github.com/n2ynzero/YouTube-Desktop-App-1.6.0');
+    window.electronAPI.shell.openExternal('https://github.com/n2ynzero/YouTube-Desktop-App-1.0.0');
   }, []);
 
   if (!mounted) return null;

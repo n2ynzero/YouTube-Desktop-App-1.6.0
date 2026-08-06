@@ -5,7 +5,7 @@ const UPDATE_INTERVAL = 15000;
 const TIMESTAMP_TOLERANCE = 10000;
 const MAX_TIMESTAMP = 2147483647000;
 const TEXT_LIMIT = 128;
-const REPO_URL = 'https://github.com/n2ynzero/YouTube-Desktop-App-1.6.0';
+const REPO_URL = 'https://github.com/n2ynzero/YouTube-Desktop-App-1.0.0';
 
 let client = null;
 let ready = false;
