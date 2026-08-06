@@ -23,7 +23,7 @@ A custom, lightweight desktop client for YouTube, built with Electron.
 
 ## Install
 
-Download the latest installer from the [Releases](https://github.com/n2ynzero/YouTube-Desktop-App-1.0.0/releases) page and run it.
+Download the latest installer from the [Releases](https://github.com/n2ynzero/YouTube-Desktop-App/releases) page and run it.
 
 ## Build From Source
 
