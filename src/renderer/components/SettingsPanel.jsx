@@ -323,7 +323,7 @@ export default function SettingsPanel({ open, onClose }) {
         <div style={styles.footer}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <span style={styles.footerDot} />
-            <span style={styles.footerText}>{version ? `ver 1.6` : ''}</span>
+            <span style={styles.footerText}>{version ? `ver 1.0` : ''}</span>
           </div>
           <span style={styles.footerText}>By Zero</span>
         </div>
