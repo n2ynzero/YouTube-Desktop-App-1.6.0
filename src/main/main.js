@@ -1,8 +1,10 @@
-const { app, BrowserWindow, ipcMain, shell, screen, components } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, screen, components, Tray, Menu, globalShortcut } = require('electron');
 const path = require('path');
 const { config, isDomainAllowed } = require('./config');
 const settings = require('./settings');
 const discord = require('./discord');
+const adblocker = require('./adblocker');
+const fs = require('fs');
 
 const BOUNDS_SAVE_DELAY = 400;
 const BLOCKED_PERMISSIONS = new Set([
@@ -22,6 +24,7 @@ let mainWindow = null;
 let webviewContents = null;
 let boundsTimer = null;
 let isQuitting = false;
+let tray = null;
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -136,7 +139,13 @@ function createWindow() {
     }
   });
 
-  mainWindow.on('close', () => {
+  mainWindow.on('close', (e) => {
+    if (!isQuitting && settings.get('minimizeToTray', config.minimizeToTray)) {
+      e.preventDefault();
+      mainWindow.hide();
+      return;
+    }
+
     if (boundsTimer) {
       clearTimeout(boundsTimer);
       boundsTimer = null;
@@ -206,11 +215,15 @@ app.on('web-contents-created', (_, contents) => {
 });
 
 app.on('will-attach-webview', (_, webPreferences) => {
-  delete webPreferences.preload;
+  webPreferences.preload = path.join(__dirname, 'webview-preload.js');
   webPreferences.nodeIntegration = false;
-  webPreferences.contextIsolation = true;
+  webPreferences.contextIsolation = false;
   webPreferences.backgroundThrottling = false;
   webPreferences.plugins = true;
+});
+
+ipcMain.on('settings:get-sync', (event, key) => {
+  event.returnValue = settings.get(key);
 });
 
 ipcMain.handle('window:minimize', () => {
@@ -227,7 +240,18 @@ ipcMain.handle('window:maximize', () => {
 });
 
 ipcMain.handle('window:close', () => {
-  mainWindow?.close();
+  if (settings.get('minimizeToTray', config.minimizeToTray)) {
+    mainWindow?.hide();
+  } else {
+    mainWindow?.close();
+  }
+});
+
+ipcMain.handle('window:toggle-always-on-top', () => {
+  if (!mainWindow) return false;
+  const isPinned = !mainWindow.isAlwaysOnTop();
+  mainWindow.setAlwaysOnTop(isPinned);
+  return isPinned;
 });
 
 ipcMain.handle('window:is-maximized', () => mainWindow?.isMaximized() ?? false);
@@ -236,6 +260,13 @@ ipcMain.handle('settings:get', (_, key) => settings.get(key));
 
 ipcMain.handle('settings:set', (_, key, value) => {
   settings.set(key, value);
+  if (key === 'adblockEnabled') {
+    adblocker.applyAdblockerState();
+  }
+  
+  if (webviewContents) {
+    webviewContents.send('settings:update', key, value);
+  }
 });
 
 ipcMain.handle('settings:get-hardware-accel', () =>
@@ -257,7 +288,8 @@ ipcMain.handle('app:get-config', () => ({
   allowedDomains: config.allowedDomains,
   homeUrl: config.homeUrl,
   version: app.getVersion(),
-  discordEnabled: config.discord.enabled
+  discordEnabled: config.discord.enabled,
+  preloadPath: require('url').pathToFileURL(path.join(__dirname, 'webview-preload.js')).href
 }));
 
 ipcMain.handle('app:get-start-url', () => {
@@ -298,7 +330,43 @@ app.whenReady().then(async () => {
   try {
     await components.whenReady();
   } catch {}
+  
   createWindow();
+  adblocker.initAdblocker();
+
+  const iconPath = path.join(__dirname, '..', '..', 'assets', 'icon.ico');
+  tray = new Tray(iconPath);
+  tray.setToolTip('YouTube for Desktop');
+  const contextMenu = Menu.buildFromTemplate([
+    { label: 'Show', click: () => mainWindow?.show() },
+    { label: 'Quit', click: () => {
+        isQuitting = true;
+        app.quit();
+      } 
+    }
+  ]);
+  tray.setContextMenu(contextMenu);
+  tray.on('click', () => {
+    if (mainWindow) {
+      mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
+    }
+  });
+
+  globalShortcut.register('MediaPlayPause', () => {
+    webviewContents?.executeJavaScript(`
+      document.querySelector('.ytp-play-button')?.click();
+    `).catch(() => {});
+  });
+  globalShortcut.register('MediaNextTrack', () => {
+    webviewContents?.executeJavaScript(`
+      document.querySelector('.ytp-next-button')?.click();
+    `).catch(() => {});
+  });
+  globalShortcut.register('MediaPreviousTrack', () => {
+    webviewContents?.executeJavaScript(`
+      window.history.back();
+    `).catch(() => {});
+  });
 });
 
 app.on('before-quit', async (event) => {

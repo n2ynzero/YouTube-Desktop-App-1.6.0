@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 
 const styles = {
   bar: {
@@ -95,6 +95,15 @@ function SettingsIcon() {
   );
 }
 
+function PinIcon({ active }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="17" x2="12" y2="22" />
+      <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+    </svg>
+  );
+}
+
 function MinimizeIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -130,12 +139,21 @@ function CloseIcon() {
 
 function TitleBar({ windowState, onSettingsToggle }) {
   const isMaximized = windowState === 'maximized';
+  const [isPinned, setIsPinned] = useState(false);
+
+  const togglePin = async () => {
+    const pinned = await window.electronAPI.window.toggleAlwaysOnTop();
+    setIsPinned(pinned);
+  };
 
   return (
     <div style={styles.bar}>
       <div style={styles.left}>
         <button onClick={onSettingsToggle} title="Settings" style={styles.button(true)} {...neutralHover}>
           <SettingsIcon />
+        </button>
+        <button onClick={togglePin} title={isPinned ? "Unpin from Top" : "Pin to Top"} style={{...styles.button(true), color: isPinned ? '#fff' : '#888'}} {...neutralHover}>
+          <PinIcon active={isPinned} />
         </button>
       </div>
 

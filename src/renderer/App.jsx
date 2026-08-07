@@ -21,6 +21,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [startUrl, setStartUrl] = useState(null);
+  const [preloadPath, setPreloadPath] = useState('');
 
   const webviewRef = useRef(null);
   const scrapeTimerRef = useRef(null);
@@ -77,6 +78,9 @@ export default function App() {
     });
 
     window.electronAPI.app.getStartUrl().then(setStartUrl);
+    window.electronAPI.app.getConfig().then((config) => {
+      if (config.preloadPath) setPreloadPath(config.preloadPath);
+    });
 
     return () => {
       unsubscribe?.();
@@ -164,7 +168,7 @@ export default function App() {
     on('render-process-gone', () => setLoadError('The page crashed. Try reloading.'));
 
     return () => controller.abort();
-  }, [startUrl, trackPage, rememberUrl, scrapePresence]);
+  }, [startUrl, preloadPath, trackPage, rememberUrl, scrapePresence]);
 
   const retry = useCallback(() => {
     setLoadError(null);
@@ -208,7 +212,7 @@ export default function App() {
           </div>
         )}
 
-        {startUrl && (
+        {startUrl && preloadPath && (
           <webview
             ref={webviewRef}
             src={startUrl}
@@ -216,6 +220,7 @@ export default function App() {
             allowpopups="true"
             partition="persist:youtube"
             plugins="true"
+            preload={preloadPath}
           />
         )}
 

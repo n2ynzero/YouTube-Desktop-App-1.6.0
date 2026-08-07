@@ -7,6 +7,7 @@ const DEFAULTS = {
     enabled: true
   },
   hardwareAcceleration: true,
+  minimizeToTray: true,
   window: {
     width: 1400,
     height: 900,
@@ -46,6 +47,7 @@ function normalize(raw) {
   return {
     discord,
     hardwareAcceleration: raw.hardwareAcceleration !== false,
+    minimizeToTray: raw.minimizeToTray !== false,
     window,
     homeUrl: typeof raw.homeUrl === 'string' && raw.homeUrl ? raw.homeUrl : DEFAULTS.homeUrl,
     allowedDomains: [...new Set(domains)]

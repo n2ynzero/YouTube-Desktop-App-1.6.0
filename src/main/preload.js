@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     minimize: () => ipcRenderer.invoke('window:minimize'),
     maximize: () => ipcRenderer.invoke('window:maximize'),
     close: () => ipcRenderer.invoke('window:close'),
+    toggleAlwaysOnTop: () => ipcRenderer.invoke('window:toggle-always-on-top'),
     isMaximized: () => ipcRenderer.invoke('window:is-maximized'),
     onStateChange: (callback) => {
       const listener = (_, state) => callback(state);

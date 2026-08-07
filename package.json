@@ -1,6 +1,6 @@
 {
   "name": "youtube-for-desktop",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Unofficial YouTube Desktop App",
   "author": "Zero",
   "license": "MIT",
@@ -13,6 +13,7 @@
     "dist": "electron-builder"
   },
   "build": {
+    "npmRebuild": false,
     "appId": "com.zero.youtube-for-desktop",
     "productName": "YouTube For Desktop",
     "directories": {
@@ -37,7 +38,10 @@
     }
   },
   "dependencies": {
-    "discord-rpc": "^4.0.1"
+    "@cliqz/adblocker-electron": "^1.34.0",
+    "cross-fetch": "^4.1.0",
+    "discord-rpc": "^4.0.1",
+    "electron-is-dev": "^3.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
@@ -63,5 +67,8 @@
   },
   "allowScripts": {
     "github:castlabs/electron-releases#df5ab90dfbe29baf286913cd0c3488c2c133b8e7": true
+  },
+  "overrides": {
+    "node-abi": "latest"
   }
 }

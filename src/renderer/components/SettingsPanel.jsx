@@ -219,6 +219,18 @@ function CloseIcon() {
 
 export default function SettingsPanel({ open, onClose }) {
   const [hardwareAccel, setHardwareAccel] = useState(true);
+  const [minimizeToTray, setMinimizeToTray] = useState(true);
+  const [adblockEnabled, setAdblockEnabled] = useState(true);
+  const [sponsorblockEnabled, setSponsorblockEnabled] = useState(true);
+  const [sbCategories, setSbCategories] = useState({
+    sponsor: true,
+    intro: true,
+    outro: true,
+    interaction: true,
+    selfpromo: true,
+    music_offtv: true,
+    filler: true
+  });
   const [version, setVersion] = useState('');
   const [mounted, setMounted] = useState(false);
   const [hidden, setHidden] = useState(true);
@@ -231,6 +243,12 @@ export default function SettingsPanel({ open, onClose }) {
     clearTimeout(closeTimerRef.current);
 
     window.electronAPI.settings.getHardwareAccel().then(setHardwareAccel);
+    window.electronAPI.settings.get('minimizeToTray').then((val) => setMinimizeToTray(val ?? true));
+    window.electronAPI.settings.get('adblockEnabled').then((val) => setAdblockEnabled(val ?? true));
+    window.electronAPI.settings.get('sponsorblockEnabled').then((val) => setSponsorblockEnabled(val ?? true));
+    window.electronAPI.settings.get('sbCategories').then((val) => {
+      if (val) setSbCategories(val);
+    });
     window.electronAPI.app.getConfig().then((cfg) => setVersion(cfg.version));
 
     const frame = requestAnimationFrame(() => {
@@ -264,6 +282,29 @@ export default function SettingsPanel({ open, onClose }) {
     setHardwareAccel(enabled);
     await window.electronAPI.settings.setHardwareAccel(enabled);
     await window.electronAPI.app.restart();
+  }, []);
+
+  const handleToggleTray = useCallback(async (enabled) => {
+    setMinimizeToTray(enabled);
+    await window.electronAPI.settings.set('minimizeToTray', enabled);
+  }, []);
+
+  const handleToggleAdblock = useCallback(async (enabled) => {
+    setAdblockEnabled(enabled);
+    await window.electronAPI.settings.set('adblockEnabled', enabled);
+  }, []);
+
+  const handleToggleSponsorblock = useCallback(async (enabled) => {
+    setSponsorblockEnabled(enabled);
+    await window.electronAPI.settings.set('sponsorblockEnabled', enabled);
+  }, []);
+
+  const handleToggleCategory = useCallback(async (key) => {
+    setSbCategories(prev => {
+      const next = { ...prev, [key]: !prev[key] };
+      window.electronAPI.settings.set('sbCategories', next);
+      return next;
+    });
   }, []);
 
   const openRepo = useCallback(() => {
@@ -307,7 +348,109 @@ export default function SettingsPanel({ open, onClose }) {
                 <div style={styles.toggleThumb(hardwareAccel)} />
               </button>
             </div>
+
+            <div style={{...styles.row, marginTop: 8}} {...rowHover}>
+              <div style={{ color: minimizeToTray ? '#FF0000' : '#666', flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 14h6v6H4zM14 4h6v6h-6zM14 14h6v6h-6zM4 4h6v6H4z" />
+                </svg>
+              </div>
+              <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#fff' }}>Minimize to Tray</span>
+              <button
+                style={styles.toggleTrack(minimizeToTray)}
+                onClick={() => handleToggleTray(!minimizeToTray)}
+              >
+                <div style={styles.toggleThumb(minimizeToTray)} />
+              </button>
+            </div>
           </div>
+
+          <div style={styles.section}>
+            <div style={styles.sectionLabel}>Extensions</div>
+
+            <div style={styles.row} {...rowHover}>
+              <div style={{ color: adblockEnabled ? '#FF0000' : '#666', flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </div>
+              <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: '#fff' }}>Enable Adblocker</span>
+              <button
+                style={styles.toggleTrack(adblockEnabled)}
+                onClick={() => handleToggleAdblock(!adblockEnabled)}
+              >
+                <div style={styles.toggleThumb(adblockEnabled)} />
+              </button>
+            </div>
+
+            <div style={{...styles.row, marginTop: 8}} {...rowHover}>
+              <div style={{ color: sponsorblockEnabled ? '#FF0000' : '#666', flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="13 19 22 12 13 5 13 19" />
+                  <polygon points="2 19 11 12 2 5 2 19" />
+                </svg>
+              </div>
+              <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: '#fff' }}>Enable SponsorBlock</span>
+              <button
+                style={styles.toggleTrack(sponsorblockEnabled)}
+                onClick={() => handleToggleSponsorblock(!sponsorblockEnabled)}
+              >
+                <div style={styles.toggleThumb(sponsorblockEnabled)} />
+              </button>
+            </div>
+          </div>
+
+          <div style={{...styles.section, paddingTop: 8, display: sponsorblockEnabled ? 'block' : 'none'}}>
+            <div style={{...styles.sectionLabel, fontSize: 10}}>CATEGORIES TO SKIP</div>
+            
+            {[
+              { id: 'sponsor', label: 'Sponsor', color: '#00FF00', desc: 'Paid promotions or sponsorships' },
+              { id: 'intro', label: 'Intermission/Intro', color: '#00FFFF', desc: 'Title cards, intros, and intermissions' },
+              { id: 'outro', label: 'Endcards/Credits', color: '#0000FF', desc: 'Credits or when the video essentially ends' },
+              { id: 'interaction', label: 'Interaction Reminder', color: '#9b59b6', desc: 'Reminders to like, subscribe, or comment' },
+              { id: 'selfpromo', label: 'Unpaid/Self Promo', color: '#FFFF00', desc: 'Unpaid promotions for the creator\'s other projects' },
+              { id: 'music_offtv', label: 'Non-Music Section', color: '#FF8C00', desc: 'Non-music sections in music videos' },
+              { id: 'filler', label: 'Filler Tangent', color: '#FF00FF', desc: 'Tangents or filler information' }
+            ].map((cat) => (
+              <div key={cat.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 16, paddingLeft: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: cat.color, marginRight: 12, opacity: sbCategories[cat.id] ? 1 : 0.2 }} />
+                <div style={{ fontSize: 13, color: '#aaa', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6, position: 'relative' }}>
+                  {cat.label}
+                  <div
+                    className="tooltip-container"
+                    style={{ position: 'relative', display: 'flex', alignItems: 'center', cursor: 'default' }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="16" x2="12" y2="12" />
+                      <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    <div className="tooltip-modal" style={{
+                      position: 'absolute', left: '50%', bottom: '100%', transform: 'translate(-50%, -10px)',
+                      background: 'rgba(30, 30, 30, 0.95)', color: '#fff', padding: '6px 12px', borderRadius: 4,
+                      fontSize: 11, whiteSpace: 'nowrap', zIndex: 100, pointerEvents: 'none', border: '1px solid #333',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.5)', opacity: 0, transition: 'opacity 0.2s', visibility: 'hidden'
+                    }}>
+                      {cat.desc}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  style={{ ...styles.toggleTrack(sbCategories[cat.id]), marginLeft: 'auto', transform: 'scale(0.8)', transformOrigin: 'right center' }}
+                  onClick={() => handleToggleCategory(cat.id)}
+                >
+                  <div style={styles.toggleThumb(sbCategories[cat.id])} />
+                </button>
+              </div>
+            ))}
+          </div>
+          
+          <style dangerouslySetInnerHTML={{__html: `
+            .tooltip-container:hover .tooltip-modal {
+              opacity: 1 !important;
+              visibility: visible !important;
+            }
+          `}} />
 
           <div style={styles.section}>
             <div style={styles.sectionLabel}>Links</div>
@@ -323,7 +466,7 @@ export default function SettingsPanel({ open, onClose }) {
         <div style={styles.footer}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <span style={styles.footerDot} />
-            <span style={styles.footerText}>{version ? `ver 1.0` : ''}</span>
+            <span style={styles.footerText}>VER 1.1.0</span>
           </div>
           <span style={styles.footerText}>By Zero</span>
         </div>
